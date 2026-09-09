@@ -13,9 +13,9 @@ Project 10 — The Secret Drill
 SECRET_DRILL_TOKEN
 ```
 
-Value intentionally not recorded here. It is the harmless dummy token
-`secret-drill-demo-token-123`, which exists only in the local gitignored
-`.env` file and, for Run 2, in the execution environment. Never commit it.
+Value intentionally not recorded here. It is a harmless dummy token that
+exists only in the local gitignored `.env` file and, for Run 2, in the
+execution environment. Never commit it.
 
 ## Local Setup
 
@@ -39,8 +39,8 @@ run_drill.py
 `.env` is absent from `git ls-files` and is reported by `git check-ignore`.
 The repository therefore contains application code and prompts, but no secret.
 
-A content scan of every file with `Select-String "secret-drill-demo-token-123"`
-matched exactly one file: the local, untracked, gitignored `.env`.
+A content scan of every file for the dummy token value matched exactly one
+file: the local, untracked, gitignored `.env`.
 
 ## Run Mechanics Note
 

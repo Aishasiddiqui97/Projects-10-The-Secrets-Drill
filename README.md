@@ -89,8 +89,8 @@ No daily/hourly/weekly schedule is needed for this drill.
 
 ## Secret Setup
 - The variable name is `SECRET_DRILL_TOKEN`.
-- Locally, `.env` contains the harmless dummy value
-  `SECRET_DRILL_TOKEN=secret-drill-demo-token-123`.
+- Locally, `.env` contains a harmless dummy value under the key
+  `SECRET_DRILL_TOKEN`. The value itself is not recorded in this document.
 - `.gitignore` excludes `.env`, `.env.*`, `drill_logs/`, and Python caches.
 - `.env` is NOT committed. `git check-ignore -v .env` returns
   `.gitignore:1:.env	.env`, and `git ls-files` lists only `.gitignore`,
