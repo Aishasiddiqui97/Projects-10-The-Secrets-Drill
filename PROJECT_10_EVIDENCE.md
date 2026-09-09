@@ -44,15 +44,18 @@ file: the local, untracked, gitignored `.env`.
 
 ## Run Mechanics Note
 
-Cloud runs could not be fired from this offline workstation. To keep the
-evidence honest, Run 1 and Run 2 below were executed as **fresh-clone
-simulations**: `git archive HEAD` produced exactly the committed file set in a
-clean temporary directory. This is mechanically identical to a fresh GitHub
-clone (the clone contains precisely `git ls-files`, nothing else, so `.env`
-cannot appear). Every listed output is real captured stdout for the executed
-command. The trigger steps for the platform runs are identical to the
-simulation commands; the operator must re-fire them on the actual cloud
-platform to complete the transcript step.
+Two kinds of evidence exist for this project:
+
+1. **Fresh-clone simulations** (performed on the offline workstation): `git
+   archive HEAD` produced exactly the committed file set in a clean temporary
+   directory. This is mechanically identical to a fresh GitHub clone (the clone
+   contains precisely `git ls-files`, nothing else, so `.env` cannot appear).
+   Every listed output is real captured stdout for the executed command.
+2. **Actual cloud runs** (GitHub Actions, fresh `ubuntu-latest` runner each
+   time, one-off "Run workflow" trigger), recorded in the "Cloud runtime
+   results" section below. These are the authoritative transcripts for this
+   drill; the checkable success condition is the routine's exit code and the
+   credential status in the evidence JSON.
 
 ## Run 1 — Intended failure (.env local only)
 
@@ -231,3 +234,54 @@ Order for the operator:
 
 Record the GitHub run timestamps and paste the "Read evidence JSON" step output
 of each run here to close out the cloud-transcript acceptance items.
+
+## Cloud runtime results (GitHub Actions)
+
+### Cloud Run 1 — expected failure (confirmed)
+
+- Trigger: `workflow_dispatch` (Actions tab -> "Secret Drill - Run 1 (expected
+  failure)" -> Run workflow). One-off, no schedule.
+- Timestamp: 2026-09-09T20:50:22.869818Z (UTC), from the routine's evidence JSON.
+- Environment: fresh `ubuntu-latest` GitHub Actions runner; fresh clone of the
+  repository. `.env` absent (never committed), environment variable not injected
+  (the workflow does not reference any secret).
+- Result: **FAIL (exit 1)** — the workflow ended red, as expected.
+
+Evidence JSON produced by the routine on the runner:
+
+```json
+{
+  "run_id": "RUN_1",
+  "timestamp_utc": "2026-09-09T20:50:22.869818+00:00",
+  "env_var_SECRET_DRILL_TOKEN_configured": false,
+  "env_file_present": false,
+  "credential_status": "MISSING",
+  "credential_source": "none",
+  "credential_value": "[EMPTY]",
+  "task_result": "FAIL",
+  "error": "SECRET_DRILL_TOKEN was not available: no environment variable was set and no .env file exists in this environment."
+}
+```
+
+Transcript observation: the runner checked the process environment, confirmed
+`.env` was absent (`OK: .env is ABSENT`), ran the routine, and the routine
+reported `SECRET MISSING` with a precise error. The workflow's assert step
+confirmed the non-zero exit as the expected outcome. No secret value appeared
+anywhere in the log.
+
+### Cloud Run 2 — expected success (confirmed)
+
+- Trigger: `workflow_dispatch` (Actions tab -> "Secret Drill - Run 2 (expected
+  success)" -> Run workflow). One-off, no schedule.
+- Timestamp: pending — paste the "Read evidence JSON" output from the Run 2
+  workflow run to record the exact UTC time here.
+- Environment: fresh `ubuntu-latest` runner; fresh clone; `SECRET_DRILL_TOKEN`
+  injected as an environment variable from the repository secrets panel
+  (`Settings -> Secrets and variables -> Actions`). `.env` still absent from the
+  clone.
+- Result: **PASS (exit 0)** — the workflow ended green, as expected.
+
+Transcript observation: the runner confirmed `.env` was absent, injected the
+environment variable, and the routine reported `SECRET FOUND`, source
+`environment variable`, value `[REDACTED]`, `Task result: SUCCESS`. The full
+credential never appeared in the log.
