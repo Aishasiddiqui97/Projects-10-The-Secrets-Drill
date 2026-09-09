@@ -1,0 +1,5 @@
+.env
+.env.*
+drill_logs/
+__pycache__/
+*.pyc
