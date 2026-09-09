@@ -1,0 +1,63 @@
+name: Secret Drill - Run 2 (expected success)
+
+# One-off trigger: use the "Run workflow" button in the Actions tab.
+# Do NOT repeat on a schedule.
+
+# Prompt instruction for this run:
+# credentials are available as environment variables; do not look for a `.env` file.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run2:
+    name: Run 2 - env var injected by the execution environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (fresh clone)
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Confirm .env is still absent (gitignored, never committed)
+        run: |
+          if [ -f .env ]; then
+            echo "ERROR: .env unexpectedly present"; exit 1
+          fi
+          echo "OK: .env is ABSENT; the credential comes from the environment only"
+
+      - name: "Prompt: credentials are available as environment variables; do not look for a `.env` file."
+        run: echo "The secret is injected as the environment variable SECRET_DRILL_TOKEN"
+
+      - name: Run the secret-dependent routine with the environment variable
+        env:
+          DRILL_RUN: RUN_2
+          SECRET_DRILL_TOKEN: ${{ secrets.SECRET_DRILL_TOKEN }}
+        run: |
+          if [ -z "$SECRET_DRILL_TOKEN" ]; then
+            echo "ERROR: SECRET_DRILL_TOKEN is not configured in this environment."
+            echo "Configure it first: Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          python run_drill.py
+
+      - name: Read evidence JSON (full transcript)
+        run: |
+          echo '## Run 2 evidence' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat drill_logs/drill_result_run_2.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "=== drill_logs/drill_result_run_2.json ==="
+          cat drill_logs/drill_result_run_2.json
+
+      - name: Upload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: run2-evidence
+          path: drill_logs/

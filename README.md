@@ -87,6 +87,16 @@ exactly twice with a one-off trigger:
 
 No daily/hourly/weekly schedule is needed for this drill.
 
+The provided GitHub Actions workflows (`run1-fail.yml`, `run2-success.yml`)
+are fired manually with the **"Run workflow"** button in the Actions tab (a
+`workflow_dispatch` one-off trigger), so each run is a fresh clean runner.
+
+- Run the `Secret Drill - Run 1 (expected failure)` workflow BEFORE adding the
+  repo secret.
+- Then add the repository secret `SECRET_DRILL_TOKEN` (Settings -> Secrets and
+  variables -> Actions) with the same dummy value as the local `.env`.
+- Finally run the `Secret Drill - Run 2 (expected success)` workflow.
+
 ## Secret Setup
 - The variable name is `SECRET_DRILL_TOKEN`.
 - Locally, `.env` contains a harmless dummy value under the key

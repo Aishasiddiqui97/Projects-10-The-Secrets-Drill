@@ -1,0 +1,70 @@
+name: Secret Drill - Run 1 (expected failure)
+
+# One-off trigger: use the "Run workflow" button in the Actions tab.
+# Do NOT repeat on a schedule.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run1:
+    name: Run 1 - fresh clone, .env absent, no env var
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (fresh clone)
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Confirm .env is absent in this fresh clone
+        run: |
+          if [ -f .env ]; then
+            echo "ERROR: .env unexpectedly present"; exit 1
+          fi
+          echo "OK: .env is ABSENT (gitignored file never reaches the clone)"
+
+      - name: Run the secret-dependent routine (return code captured)
+        env:
+          DRILL_RUN: RUN_1
+        run: |
+          set +e
+          python run_drill.py
+          code=$?
+          set -e
+          echo "ROUTINE_EXIT_CODE=$code"
+          echo "ROUTINE_EXIT_CODE=$code" >> "$GITHUB_ENV"
+          if [ "$code" -eq 0 ]; then
+            echo "Actual result: SUCCESS"
+          else
+            echo "Actual result: FAIL"
+          fi
+          echo "Expected result: FAIL"
+
+      - name: Read evidence JSON (full transcript)
+        run: |
+          echo '## Run 1 evidence' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cat drill_logs/drill_result_run_1.json >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "=== drill_logs/drill_result_run_1.json ==="
+          cat drill_logs/drill_result_run_1.json
+
+      - name: Assert the failure was the expected outcome
+        run: |
+          if [ "$ROUTINE_EXIT_CODE" -eq 0 ]; then
+            echo "UNEXPECTED: routine succeeded, but Run 1 must FAIL"
+            exit 1
+          fi
+          echo "OK: routine failed exactly as the gitignored .env drill predicts"
+
+      - name: Upload evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: run1-evidence
+          path: drill_logs/

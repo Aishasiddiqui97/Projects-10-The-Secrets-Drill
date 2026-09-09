@@ -205,3 +205,29 @@ alone does not describe every runtime dependency.
 
 Environment variable -> supplied by runtime -> available to routine -> credential
 found -> second run succeeds.
+
+## GitHub Actions runner configuration
+
+The repository ships two one-off workflows (manual "Run workflow" trigger,
+fresh runner each time):
+
+- `.github/workflows/run1-fail.yml` — Run 1 expected failure. It does NOT
+  reference any secret, confirms `.env` is absent in the fresh clone, runs the
+  routine, and asserts the routine exited non-zero.
+- `.github/workflows/run2-success.yml` — Run 2 expected success. It injects
+  `SECRET_DRILL_TOKEN` from the Actions secrets panel as an environment variable
+  (never from a file) and asserts the routine exited zero. It contains the
+  required prompt sentence verbatim in a step name, and the equivalent sentence
+  as a comment.
+
+Order for the operator:
+
+1. Fire Run 1 while no repo secret exists -> the run must end FAIL/red, and its
+   transcript must be reviewed.
+2. Configure the repo secret `SECRET_DRILL_TOKEN` (dummy value) in
+   `Settings -> Secrets and variables -> Actions`.
+3. Fire Run 2 -> the run must end PASS/green, and its transcript must be
+   reviewed.
+
+Record the GitHub run timestamps and paste the "Read evidence JSON" step output
+of each run here to close out the cloud-transcript acceptance items.
