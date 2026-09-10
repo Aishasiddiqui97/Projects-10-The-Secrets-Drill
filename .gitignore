@@ -3,3 +3,4 @@
 drill_logs/
 __pycache__/
 *.pyc
+.kiro/
